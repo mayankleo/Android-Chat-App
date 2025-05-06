@@ -49,7 +49,14 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("androidx.compose.material3:material3:1.3.1")
     implementation("org.whispersystems:signal-protocol-android:2.8.1")
+
     implementation("io.socket:socket.io-client:2.1.0")
+
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    implementation("androidx.compose.runtime:runtime-livedata:1.8.0")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

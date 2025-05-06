@@ -3,7 +3,6 @@ package com.example.chat
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,44 +12,48 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.chat.ui.theme.ChatTheme
-import androidx.compose.material3.Icon
-import androidx.compose.ui.draw.rotate
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.launch
@@ -69,12 +72,12 @@ val BlackText = Color.Black
 data class ChatMessage(val text: String, val isSent: Boolean, val id: Int)
 
 @Composable
-fun ChatScreen(navController: NavController? = null) {
+fun ChatPage(navController: NavController? = null) {
     val context = LocalContext.current
 
     var socket: Socket? = remember { null }
-//    val SERVER_URL = "http://10.0.2.2:3000"
-    val SERVER_URL = "https://socketio-server2525.onrender.com"
+    val SERVER_URL = "http://10.0.2.2:3000"
+//    val SERVER_URL = "https://socketio-server2525.onrender.com"
     val coroutineScope = rememberCoroutineScope()
     val listState = rememberLazyListState()
 
@@ -92,6 +95,9 @@ fun ChatScreen(navController: NavController? = null) {
             try {
                 val opts = IO.Options()
                 opts.reconnection = true
+                opts.auth = mapOf(
+                    "token" to "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJDbGllbnRJRCI6IjkwNGRhOWEwLTAyMjgtNDhkOC1hNmE2LWJkY2E1N2NhMjcxMyIsIlBob25lIjoiOTYzMDU3MDAzNyIsImlhdCI6MTc0NjU0MzE5MCwiZXhwIjoxNzQ2NjI5NTkwfQ.mXxd_iIKeV4yo6OwBOeeBszHQ4s4pL-SadNo8Cyogvg"
+                )
                 socket = IO.socket(SERVER_URL, opts)
                 socket?.connect()
 
@@ -105,9 +111,9 @@ fun ChatScreen(navController: NavController? = null) {
 
                 socket?.on(Socket.EVENT_CONNECT_ERROR) { args ->
                     Log.i("SocketIO", "Error: ${args.joinToString()}")
-                    Toast.makeText(context, "Error Connecting to Server", Toast.LENGTH_LONG).show()
+//                    Toast.makeText(context, "Error Connecting to Server", Toast.LENGTH_LONG).show()
                 }
-                socket?.on("reply") { args ->
+                socket?.on("msg") { args ->
                     val msg = args[0] as String
                     val nextId = messages.first().id + 1
 
@@ -131,7 +137,7 @@ fun ChatScreen(navController: NavController? = null) {
 
 
     var text by remember { mutableStateOf("") }
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+    Scaffold(modifier = Modifier.fillMaxSize().imePadding()) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -152,13 +158,11 @@ fun ChatScreen(navController: NavController? = null) {
                 state = listState,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .fillMaxWidth(),
                 reverseLayout = true
             ) {
                 items(messages, key = { it.id }) { message ->
                     ChatBubble(message)
-                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
 
@@ -166,35 +170,42 @@ fun ChatScreen(navController: NavController? = null) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                    .drawBehind {
-                        drawLine(
-                            color = MidGrayBubble,
-                            start = Offset(0f, 0f),
-                            end = Offset(size.width, 0f),
-                            strokeWidth = 1.dp.toPx()
-                        )
-                    },
+                    .padding(4.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                TextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    placeholder = { Text("Type a message...", color = Color.Gray) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = LightGrayBg,
-                        unfocusedContainerColor = LightGrayBg,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedTextColor = BlackText,
-                        unfocusedTextColor = BlackText,
-                        cursorColor = TealPrimary
+                val scrollState = rememberScrollState()
+                LaunchedEffect(text) {
+                    scrollState.animateScrollTo(scrollState.maxValue)
+                }
+                Box(
+                    modifier = Modifier.weight(1f)
+                        .heightIn(min = 64.dp, max = 160.dp)
+                        .verticalScroll(scrollState)
+                        .background(LightGrayBg, RoundedCornerShape(24.dp))
+                        .padding(12.dp)
+                ) {
+                    BasicTextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        textStyle = TextStyle(
+                            color = BlackText,
+                            fontSize = 16.sp
+                        ),
+                        cursorBrush = SolidColor(TealPrimary),
+                        decorationBox = { innerTextField ->
+                            if (text.isEmpty()) {
+                                Text(
+                                    text = "Type a message...",
+                                    color = Color.Gray
+                                )
+                            }
+                            innerTextField()
+                        }
                     )
-                )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
                 IconButton(
                     onClick = {
                         if (text.isNotBlank()) {
@@ -204,25 +215,23 @@ fun ChatScreen(navController: NavController? = null) {
                                     text.trim(),
                                     isSent = true,
                                     id = (messages.maxOfOrNull { it.id } ?: -1) + 1))
-                            socket?.emit("message", text.trim())
-                            text = "" // Clear input after sending
-                            // Consider scrolling to the new message if needed (might require CoroutineScope)
+                            socket?.emit("msg", text.trim())
+                            text = ""
                             coroutineScope.launch {
                                 listState.animateScrollToItem(0)
                             }
                         }
                     },
                     modifier = Modifier
-                        // .padding(horizontal = 4.dp, vertical = 4.dp) // Padding handled by Row
-                        .clip(RoundedCornerShape(50)) // Make it circular
-                        .background(TealPrimary) // Teal background for button
-                        .size(48.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(TealPrimary)
+                        .size(64.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Send,
                         contentDescription = "Send",
-                        tint = WhiteText, // White icon
-                        modifier = Modifier.rotate(-40f), // Keep rotation
+                        tint = WhiteText,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -231,9 +240,9 @@ fun ChatScreen(navController: NavController? = null) {
 }
 
 fun getCurrentTime(): String {
-    val currentTime = LocalTime.now() // Get the current time
-    val formatter = DateTimeFormatter.ofPattern("hh:mm a") // Define the desired format
-    return currentTime.format(formatter) // Format the time and return it as a string
+    val currentTime = LocalTime.now()
+    val formatter = DateTimeFormatter.ofPattern("hh:mm a")
+    return currentTime.format(formatter)
 }
 
 @Composable
@@ -241,13 +250,13 @@ fun ChatBubble(message: ChatMessage) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp), // Consistent padding
+            .padding(horizontal = 4.dp),
         horizontalAlignment = if (message.isSent) Alignment.End else Alignment.Start
     ) {
         Box(
             modifier = Modifier
                 .clip(
-                    RoundedCornerShape( // Custom rounding for chat bubble effect
+                    RoundedCornerShape(
                         topStart = 16.dp,
                         topEnd = 16.dp,
                         bottomStart = if (message.isSent) 16.dp else 0.dp,
@@ -255,22 +264,20 @@ fun ChatBubble(message: ChatMessage) {
                     )
                 )
                 .background(
-                    if (message.isSent) TealPrimary else MidGrayBubble, // Use theme colors
+                    if (message.isSent) TealPrimary else MidGrayBubble,
                 )
-                .padding(horizontal = 12.dp, vertical = 8.dp) // Adjust padding inside bubble
+                .padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Text(
                 text = message.text,
-                color = if (message.isSent) WhiteText else BlackText // Adjust text color based on bubble
+                color = if (message.isSent) WhiteText else BlackText
             )
         }
 
-        // Time below the bubble
         Text(
-            text = getCurrentTime(), // Replace with actual time if available
-            fontSize = 10.sp, // Smaller font size for time
-            color = DarkGrayText, // Use dark gray for timestamp
-            modifier = Modifier.padding(top = 4.dp, start = 8.dp, end = 8.dp) // Adjust padding
+            text = getCurrentTime(),
+            fontSize = 10.sp,
+            color = DarkGrayText
         )
     }
 }
@@ -278,8 +285,7 @@ fun ChatBubble(message: ChatMessage) {
 @Preview(showBackground = true)
 @Composable
 fun PreviewSimpleScreen() {
-    ChatTheme { // Wrap preview in theme if you have one defined
-        ChatScreen()
+    ChatTheme {
+        ChatPage()
     }
 }
-

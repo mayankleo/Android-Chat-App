@@ -6,20 +6,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.chat.ui.theme.ChatTheme
 
 @Composable
-fun NavigationStack() {
+fun NavigationStack(viewModel: ChatViewModel) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screens.Chat.route) {
+    NavHost(navController = navController, startDestination = Screens.Login.route) {
 
         composable(route = Screens.Login.route) {
-            OTPLoginScreen(navController = navController)
+            LoginPage(navController = navController, viewModel = viewModel)
         }
 
         composable(route = Screens.Chat.route) {
-            ChatScreen(navController = navController)
+            ChatPage(navController = navController)
         }
 
         composable(
@@ -31,7 +30,7 @@ fun NavigationStack() {
                 }
             )
         ) {
-            HomeScreen(text = it.arguments?.getString("text"))
+            HomePage(text = it.arguments?.getString("text"))
         }
     }
 }
