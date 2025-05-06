@@ -6,13 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.ViewModelProvider
 import com.example.chat.ui.theme.ChatTheme
-import com.google.firebase.FirebaseApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val chatViewModel = ViewModelProvider(this)[ChatViewModel::class.java]
-        FirebaseApp.initializeApp(this)
         enableEdgeToEdge()
         setContent {
             ChatTheme {

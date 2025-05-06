@@ -43,12 +43,9 @@ android {
 
 dependencies {
 
-    implementation(platform("com.google.firebase:firebase-bom:33.11.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth-ktx")
     implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("androidx.compose.material3:material3:1.3.1")
-    implementation("org.whispersystems:signal-protocol-android:2.8.1")
+//    implementation("org.whispersystems:signal-protocol-android:2.8.1")
 
     implementation("io.socket:socket.io-client:2.1.0")
 
