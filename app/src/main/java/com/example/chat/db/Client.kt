@@ -17,6 +17,6 @@ data class Message(
     @PrimaryKey(autoGenerate = true)
     var id: Int = 0,
     var message: String,
-    var senderByYou: Boolean,
+    var senderByMe: Boolean,
     var timestamp: Long = System.currentTimeMillis()
 )

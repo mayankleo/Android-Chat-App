@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 class ChatViewModel: ViewModel(){
 
     val clientDao = MainApplication.clientDatabase.getClientDao()
-    val messageList: LiveData<List<Message>> = clientDao.getMessages()
+
     val client: LiveData<Client> = clientDao.getClient()
 
     private val sendOTPApi = RetrofitInstance.sendOTPApi

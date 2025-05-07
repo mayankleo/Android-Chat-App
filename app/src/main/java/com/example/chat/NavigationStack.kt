@@ -8,17 +8,17 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 
 @Composable
-fun NavigationStack(viewModel: ChatViewModel) {
+fun NavigationStack(chatViewModel: ChatViewModel, socketViewModel: SocketViewModel) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screens.Login.route) {
+    NavHost(navController = navController, startDestination = Screens.Chat.route) {
 
         composable(route = Screens.Login.route) {
-            LoginPage(navController = navController, viewModel = viewModel)
+            LoginPage(navController = navController, chatViewModel = chatViewModel)
         }
 
         composable(route = Screens.Chat.route) {
-            ChatPage(navController = navController)
+            ChatPage(socketViewModel = socketViewModel)
         }
 
         composable(

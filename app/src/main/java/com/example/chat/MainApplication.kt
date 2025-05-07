@@ -13,10 +13,10 @@ class MainApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         clientDatabase = Room.databaseBuilder(
-            applicationContext,
-            ClientDatabase::class.java,
-            ClientDatabase.NAME
-        ).build()
+                applicationContext,
+                ClientDatabase::class.java,
+                ClientDatabase.NAME
+            ).fallbackToDestructiveMigration(false).build()
     }
 
 }

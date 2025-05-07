@@ -11,10 +11,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val chatViewModel = ViewModelProvider(this)[ChatViewModel::class.java]
+        val socketViewModel = ViewModelProvider(this)[SocketViewModel::class.java]
         enableEdgeToEdge()
         setContent {
             ChatTheme {
-                NavigationStack(chatViewModel)
+                NavigationStack(chatViewModel, socketViewModel)
             }
         }
     }

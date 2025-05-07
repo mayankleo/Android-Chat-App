@@ -31,12 +31,12 @@ import androidx.navigation.NavController
 import com.example.chat.api.NetworkResponse
 
 @Composable
-fun LoginPage(navController: NavController, viewModel: ChatViewModel) {
+fun LoginPage(navController: NavController, chatViewModel: ChatViewModel) {
     var phone by remember { mutableStateOf("9630570036") }
     var otp by remember { mutableStateOf("") }
 
-    val sendOTPResult = viewModel.sendOTPResult.observeAsState()
-    val verifyOTPResult = viewModel.verifyOTPResult.observeAsState()
+    val sendOTPResult = chatViewModel.sendOTPResult.observeAsState()
+    val verifyOTPResult = chatViewModel.verifyOTPResult.observeAsState()
 
     Column(
         modifier = Modifier
@@ -104,7 +104,7 @@ fun LoginPage(navController: NavController, viewModel: ChatViewModel) {
                         Button(
                             onClick = {
                                 if (!otp.isEmpty()) {
-                                    viewModel.verifyOTP(phone, otp)
+                                    chatViewModel.verifyOTP(phone, otp)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -148,7 +148,7 @@ fun LoginPage(navController: NavController, viewModel: ChatViewModel) {
                 Button(
                     onClick = {
                         if (!phone.isEmpty()) {
-                            viewModel.sendOTP(phone)
+                            chatViewModel.sendOTP(phone)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),

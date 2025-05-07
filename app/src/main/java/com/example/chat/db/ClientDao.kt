@@ -8,7 +8,7 @@ import androidx.room.Query
 @Dao
 interface ClientDao {
 
-    @Query("SELECT * FROM Message")
+    @Query("SELECT * FROM Message ORDER BY id DESC")
     fun getMessages(): LiveData<List<Message>>
 
     @Insert
