@@ -9,34 +9,68 @@ import com.example.chat.api.NetworkResponse
 import com.example.chat.api.RetrofitInstance
 import com.example.chat.api.SendOTPRequestModel
 import com.example.chat.api.SendOTPResponseModel
+import com.example.chat.api.VerifyOTPRequestModel
+import com.example.chat.api.VerifyOTPResponseModel
+import com.example.chat.db.Client
+import com.example.chat.db.Message
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class ChatViewModel: ViewModel(){
 
-    private val chatApi = RetrofitInstance.chatApi
+    val clientDao = MainApplication.clientDatabase.getClientDao()
+    val messageList: LiveData<List<Message>> = clientDao.getMessages()
+    val client: LiveData<Client> = clientDao.getClient()
 
-    private val _chatResult = MutableLiveData<NetworkResponse<SendOTPResponseModel>>()
-    val chatResult: LiveData<NetworkResponse<SendOTPResponseModel>> = _chatResult
-
+    private val sendOTPApi = RetrofitInstance.sendOTPApi
+    private val _sendOTPResult = MutableLiveData<NetworkResponse<SendOTPResponseModel>>()
+    val sendOTPResult: LiveData<NetworkResponse<SendOTPResponseModel>> = _sendOTPResult
     fun sendOTP(phone: String) {
-        _chatResult.value = NetworkResponse.Loading
-        Log.i("otp", "Sending OTP to phone number: $phone")
+        _sendOTPResult.value = NetworkResponse.Loading
         val request = SendOTPRequestModel(phone = phone)
         viewModelScope.launch {
             try {
-                val response = chatApi.sendOTP(request)
+                val response = sendOTPApi.sendOTP(request)
                 if (response.isSuccessful) {
                     response.body()?.let{
-                        _chatResult.value = NetworkResponse.Success(it)
+                        _sendOTPResult.value = NetworkResponse.Success(it)
                     }
                 } else {
-                    Log.e("otp", "Failed to send OTP:${response.code()} ${response.errorBody()?.string()}")
-                    _chatResult.value = NetworkResponse.Error("Failed to send OTP")
+                    Log.e("OTP Send", "Failed to send OTP:${response.code()} ${response.errorBody()?.string()}")
+                    _sendOTPResult.value = NetworkResponse.Error("Failed to send OTP")
                 }
             } catch (e: Exception) {
-                Log.e("OTP", "Exception: ${e.localizedMessage}")
-                _chatResult.value = NetworkResponse.Error("Failed to send OTP")
+                Log.e("OTP Send", "Exception: ${e.localizedMessage}")
+                _sendOTPResult.value = NetworkResponse.Error("Failed to send OTP")
             }
         }
     }
+
+    private val verifyOTPApi = RetrofitInstance.verifyOTPApi
+    private val _verifyOTPResult = MutableLiveData<NetworkResponse<VerifyOTPResponseModel>>()
+    val verifyOTPResult: LiveData<NetworkResponse<VerifyOTPResponseModel>> = _verifyOTPResult
+    fun verifyOTP(phone: String, otp: String) {
+        _verifyOTPResult.value = NetworkResponse.Loading
+        val request = VerifyOTPRequestModel(phone = phone, otp = otp)
+        viewModelScope.launch {
+            try {
+                val response = verifyOTPApi.sendOTP(request)
+                if (response.isSuccessful) {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        clientDao.insertClient(Client(token = response.body()!!.token, roomName = response.body()!!.code))
+                    }
+                    response.body()?.let{
+                        _verifyOTPResult.value = NetworkResponse.Success(it)
+                    }
+                } else {
+                    Log.e("OTP Verify", "Failed to verify OTP:${response.code()} ${response.errorBody()?.string()}")
+                    _verifyOTPResult.value = NetworkResponse.Error("Failed to send OTP")
+                }
+            } catch (e: Exception) {
+                Log.e("OTP Verify", "Exception: ${e.localizedMessage}")
+                _verifyOTPResult.value = NetworkResponse.Error("Failed to send OTP")
+            }
+        }
+    }
+
 }

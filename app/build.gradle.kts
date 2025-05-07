@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 
     id("com.google.gms.google-services")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -53,6 +54,11 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
     implementation("androidx.compose.runtime:runtime-livedata:1.8.0")
+
+    implementation("androidx.room:room-runtime:2.7.1")
+    ksp("androidx.room:room-compiler:2.7.1")
+    annotationProcessor("androidx.room:room-compiler:2.7.1")
+
 
 
     implementation(libs.androidx.core.ktx)

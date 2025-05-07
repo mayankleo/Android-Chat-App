@@ -32,11 +32,11 @@ import com.example.chat.api.NetworkResponse
 
 @Composable
 fun LoginPage(navController: NavController, viewModel: ChatViewModel) {
-    val context = LocalContext.current
-    var phoneNumber by remember { mutableStateOf("9630570036") }
+    var phone by remember { mutableStateOf("9630570036") }
     var otp by remember { mutableStateOf("") }
 
-    val chatResult = viewModel.chatResult.observeAsState()
+    val sendOTPResult = viewModel.sendOTPResult.observeAsState()
+    val verifyOTPResult = viewModel.verifyOTPResult.observeAsState()
 
     Column(
         modifier = Modifier
@@ -46,9 +46,9 @@ fun LoginPage(navController: NavController, viewModel: ChatViewModel) {
     ) {
         Text(text = "Login", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
 
-        when (val result = chatResult.value) {
+        when (val sendOTPResponse = sendOTPResult.value) {
             is NetworkResponse.Error -> {
-                Text(text = result.message, color = MaterialTheme.colorScheme.error)
+                Text(text = sendOTPResponse.message, color = MaterialTheme.colorScheme.error)
             }
 
             NetworkResponse.Loading -> {
@@ -56,54 +56,81 @@ fun LoginPage(navController: NavController, viewModel: ChatViewModel) {
             }
 
             is NetworkResponse.Success<*> -> {
-                OutlinedTextField(
-                    value = otp,
-                    onValueChange = {
-                        if (it.all { it.isDigit() } && it.length <= 6) {
-                            otp = it
-                        }
-                    },
-                    label = { Text("Enter OTP") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Gray
-                    ),
-                    singleLine = true,
-                )
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = {
-                        if (!otp.isEmpty()) {
-//                            viewModel.verifyOTP(otp)
-//                            navController.navigate(route = Screens.Home.route + "?text=Welcome")
-                            navController.navigate(route = Screens.Chat.route)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = chatResult.value !is NetworkResponse.Loading
-                ) {
-                    if (chatResult.value is NetworkResponse.Loading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = Color.Black,
-                            strokeWidth = 3.dp
+                when (val verifyOTPResponse = verifyOTPResult.value) {
+                    is NetworkResponse.Error -> {
+                        Text(
+                            text = verifyOTPResponse.message,
+                            color = MaterialTheme.colorScheme.error
                         )
-                    } else {
-                        Text(text = "Verify OTP", fontSize = 18.sp)
+                    }
+
+                    NetworkResponse.Loading -> {
+                        CircularProgressIndicator()
+                    }
+
+                    is NetworkResponse.Success<*> -> {
+                        Text(text = verifyOTPResponse.data.toString(), color = MaterialTheme.colorScheme.onPrimary)
+                        Button(
+                            onClick = {
+                                navController.navigate(route = Screens.Chat.route)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(text = "Move To Chat Page", fontSize = 18.sp)
+                        }
+                    }
+
+                    null -> {
+                        OutlinedTextField(
+                            value = otp,
+                            onValueChange = {
+                                if (it.all { it.isDigit() } && it.length <= 6) {
+                                    otp = it
+                                }
+                            },
+                            label = { Text("Enter OTP") },
+                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.Black,
+                                unfocusedTextColor = Color.Gray
+                            ),
+                            singleLine = true,
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Button(
+                            onClick = {
+                                if (!otp.isEmpty()) {
+                                    viewModel.verifyOTP(phone, otp)
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = verifyOTPResult.value !is NetworkResponse.Loading
+                        ) {
+                            if (verifyOTPResult.value is NetworkResponse.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.Black,
+                                    strokeWidth = 3.dp
+                                )
+                            } else {
+                                Text(text = "Verify OTP", fontSize = 18.sp)
+                            }
+                        }
                     }
                 }
+
             }
 
             null -> {
                 OutlinedTextField(
-                    value = phoneNumber,
+                    value = phone,
                     onValueChange = {
                         if (it.all { it.isDigit() } && it.length <= 10) {
-                            phoneNumber = it
+                            phone = it
                         }
                     },
                     label = { Text("Phone Number") },
@@ -120,14 +147,14 @@ fun LoginPage(navController: NavController, viewModel: ChatViewModel) {
 
                 Button(
                     onClick = {
-                        if (!phoneNumber.isEmpty()) {
-                            viewModel.sendOTP(phoneNumber)
+                        if (!phone.isEmpty()) {
+                            viewModel.sendOTP(phone)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = chatResult.value !is NetworkResponse.Loading
+                    enabled = sendOTPResult.value !is NetworkResponse.Loading
                 ) {
-                    if (chatResult.value is NetworkResponse.Loading) {
+                    if (sendOTPResult.value is NetworkResponse.Loading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = Color.Black,

@@ -73,7 +73,6 @@ data class ChatMessage(val text: String, val isSent: Boolean, val id: Int)
 
 @Composable
 fun ChatPage(navController: NavController? = null) {
-    val context = LocalContext.current
 
     var socket: Socket? = remember { null }
     val SERVER_URL = "http://10.0.2.2:3000"
@@ -96,13 +95,14 @@ fun ChatPage(navController: NavController? = null) {
                 val opts = IO.Options()
                 opts.reconnection = true
                 opts.auth = mapOf(
-                    "token" to "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJDbGllbnRJRCI6IjkwNGRhOWEwLTAyMjgtNDhkOC1hNmE2LWJkY2E1N2NhMjcxMyIsIlBob25lIjoiOTYzMDU3MDAzNyIsImlhdCI6MTc0NjU0MzE5MCwiZXhwIjoxNzQ2NjI5NTkwfQ.mXxd_iIKeV4yo6OwBOeeBszHQ4s4pL-SadNo8Cyogvg"
+                    "token" to "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRJRCI6IjdjNmVjM2U2LTRjY2ItNDdmNS05OGYzLWMxOWNiOWFiZDE1MyIsInBob25lIjoiOTYzMDU3MDAzOCIsImlhdCI6MTc0NjYxNjQxMCwiZXhwIjoxNzQ2NzAyODEwfQ.1Ggk5Y9Ljz0EDd0DRJ-lcPsB2AU7Fe8FE8WbayoDXxQ"
                 )
                 socket = IO.socket(SERVER_URL, opts)
                 socket?.connect()
 
                 socket?.on(Socket.EVENT_CONNECT) {
                     Log.i("SocketIO", "Connected")
+
                 }
 
                 socket?.on(Socket.EVENT_DISCONNECT) {
@@ -111,7 +111,7 @@ fun ChatPage(navController: NavController? = null) {
 
                 socket?.on(Socket.EVENT_CONNECT_ERROR) { args ->
                     Log.i("SocketIO", "Error: ${args.joinToString()}")
-//                    Toast.makeText(context, "Error Connecting to Server", Toast.LENGTH_LONG).show()
+
                 }
                 socket?.on("msg") { args ->
                     val msg = args[0] as String
