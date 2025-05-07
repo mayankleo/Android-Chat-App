@@ -2,6 +2,7 @@ package com.example.chat.api
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 
@@ -12,13 +13,6 @@ data class SendOTPRequestModel(
 data class SendOTPResponseModel(
     val message: String
 )
-
-interface SendOTPApi {
-
-    @POST("/sendOTP")
-    suspend fun sendOTP(@Body request: SendOTPRequestModel): Response<SendOTPResponseModel>
-
-}
 
 data class VerifyOTPRequestModel(
     val phone: String,
@@ -31,10 +25,28 @@ data class VerifyOTPResponseModel(
     val code: String
 )
 
-interface VerifyOTPApi {
+data class JoinWithCodeRequestModel(
+    val code: String
+)
+
+data class JoinWithCodeResponseModel(
+    val message: String,
+    val room: Room
+)
+data class Room(
+    val name: String,
+    val roomID: String
+)
+
+interface ChatAppApis {
+
+    @POST("/sendOTP")
+    suspend fun sendOTP(@Body request: SendOTPRequestModel): Response<SendOTPResponseModel>
 
     @POST("/verifyOTP")
-    suspend fun sendOTP(@Body request: VerifyOTPRequestModel): Response<VerifyOTPResponseModel>
+    suspend fun verifyOTP(@Body request: VerifyOTPRequestModel): Response<VerifyOTPResponseModel>
+
+    @POST("/joinWithCode")
+    suspend fun joinWithCode(@Header("authorization") token: String, @Body request: JoinWithCodeRequestModel): Response<JoinWithCodeResponseModel>
 
 }
-

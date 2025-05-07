@@ -5,6 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.chat.api.JoinWithCodeRequestModel
+import com.example.chat.api.JoinWithCodeResponseModel
 import com.example.chat.api.NetworkResponse
 import com.example.chat.api.RetrofitInstance
 import com.example.chat.api.SendOTPRequestModel
@@ -15,14 +17,13 @@ import com.example.chat.db.Client
 import com.example.chat.db.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ChatViewModel: ViewModel(){
 
     val clientDao = MainApplication.clientDatabase.getClientDao()
+    private val chatAppApis = RetrofitInstance.chatAppApis
 
-    val client: LiveData<Client> = clientDao.getClient()
-
-    private val sendOTPApi = RetrofitInstance.sendOTPApi
     private val _sendOTPResult = MutableLiveData<NetworkResponse<SendOTPResponseModel>>()
     val sendOTPResult: LiveData<NetworkResponse<SendOTPResponseModel>> = _sendOTPResult
     fun sendOTP(phone: String) {
@@ -30,7 +31,7 @@ class ChatViewModel: ViewModel(){
         val request = SendOTPRequestModel(phone = phone)
         viewModelScope.launch {
             try {
-                val response = sendOTPApi.sendOTP(request)
+                val response = chatAppApis.sendOTP(request)
                 if (response.isSuccessful) {
                     response.body()?.let{
                         _sendOTPResult.value = NetworkResponse.Success(it)
@@ -46,7 +47,7 @@ class ChatViewModel: ViewModel(){
         }
     }
 
-    private val verifyOTPApi = RetrofitInstance.verifyOTPApi
+
     private val _verifyOTPResult = MutableLiveData<NetworkResponse<VerifyOTPResponseModel>>()
     val verifyOTPResult: LiveData<NetworkResponse<VerifyOTPResponseModel>> = _verifyOTPResult
     fun verifyOTP(phone: String, otp: String) {
@@ -54,9 +55,10 @@ class ChatViewModel: ViewModel(){
         val request = VerifyOTPRequestModel(phone = phone, otp = otp)
         viewModelScope.launch {
             try {
-                val response = verifyOTPApi.sendOTP(request)
+                val response = chatAppApis.verifyOTP(request)
                 if (response.isSuccessful) {
                     viewModelScope.launch(Dispatchers.IO) {
+                        clientDao.deleteClient()
                         clientDao.insertClient(Client(token = response.body()!!.token, roomName = response.body()!!.code))
                     }
                     response.body()?.let{
@@ -64,11 +66,43 @@ class ChatViewModel: ViewModel(){
                     }
                 } else {
                     Log.e("OTP Verify", "Failed to verify OTP:${response.code()} ${response.errorBody()?.string()}")
-                    _verifyOTPResult.value = NetworkResponse.Error("Failed to send OTP")
+                    _verifyOTPResult.value = NetworkResponse.Error("Failed to verify OTP")
                 }
             } catch (e: Exception) {
                 Log.e("OTP Verify", "Exception: ${e.localizedMessage}")
-                _verifyOTPResult.value = NetworkResponse.Error("Failed to send OTP")
+                _verifyOTPResult.value = NetworkResponse.Error("Failed to verify OTP")
+            }
+        }
+    }
+
+
+    private val _joinWithCodeResult = MutableLiveData<NetworkResponse<JoinWithCodeResponseModel>>()
+    val joinWithCodeResult: LiveData<NetworkResponse<JoinWithCodeResponseModel>> = _joinWithCodeResult
+    fun joinWithCode(code: String) {
+        _joinWithCodeResult.value = NetworkResponse.Loading
+        val request = JoinWithCodeRequestModel(code = code)
+        viewModelScope.launch {
+            try {
+                val client = withContext(Dispatchers.IO) {
+                    clientDao.getClient()
+                }
+                Log.d("SocketViewModel", "Client value: $client")
+                val token = client.token
+                val response = chatAppApis.joinWithCode("Bearer $token",request)
+                if (response.isSuccessful) {
+                    withContext(Dispatchers.IO) {
+                        clientDao.updateClientRoomName(response.body()!!.room.name)
+                    }
+                    response.body()?.let{
+                        _joinWithCodeResult.value = NetworkResponse.Success(it)
+                    }
+                } else {
+                    Log.e("Join Room", "Failed to Join Room:${response.code()} ${response.errorBody()?.string()}")
+                    _joinWithCodeResult.value = NetworkResponse.Error("Failed to Join Room")
+                }
+            } catch (e: Exception) {
+                Log.e("Join Room", "Exception: ${e.localizedMessage}")
+                _joinWithCodeResult.value = NetworkResponse.Error("Failed to Join Room")
             }
         }
     }

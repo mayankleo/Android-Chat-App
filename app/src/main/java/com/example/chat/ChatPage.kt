@@ -43,10 +43,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.chat.db.Message
+import com.example.chat.ui.theme.ChatTheme
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -119,7 +121,7 @@ fun ChatPage(socketViewModel: SocketViewModel) {
                         .weight(1f)
                         .heightIn(min = 64.dp, max = 160.dp)
                         .verticalScroll(scrollState)
-                        .background(Color.LightGray, RoundedCornerShape(24.dp))
+                        .background(Color.LightGray, RoundedCornerShape(8.dp))
                         .padding(12.dp)
                 ) {
                     BasicTextField(
@@ -212,11 +214,3 @@ fun ChatBubble(message: Message) {
         )
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun PreviewSimpleScreen() {
-//    ChatTheme {
-//        ChatPage()
-//    }
-//}

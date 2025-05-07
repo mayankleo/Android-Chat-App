@@ -14,6 +14,5 @@ object RetrofitInstance {
             .build()
     }
 
-    val sendOTPApi: SendOTPApi = getInstance().create(SendOTPApi::class.java)
-    val verifyOTPApi: VerifyOTPApi = getInstance().create(VerifyOTPApi::class.java)
+    val chatAppApis: ChatAppApis = getInstance().create(ChatAppApis::class.java)
 }
