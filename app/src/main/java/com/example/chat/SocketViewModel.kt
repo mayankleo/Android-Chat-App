@@ -21,9 +21,9 @@ class SocketViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val client = clientDao.getClient()
             Log.d("SocketViewModel", "Client value: $client")
-            val token = client.token
+            val token = client?.token
 
-            SocketManager.initialize(token)
+            SocketManager.initialize(token.toString())
             SocketManager.connect()
 
             SocketManager.on("msg") { args ->

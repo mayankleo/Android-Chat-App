@@ -55,8 +55,7 @@ fun LoginPage(navController: NavController, chatViewModel: ChatViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(Color.White),
-            verticalArrangement = Arrangement.Center
+                .background(Color.White)
         ) {
             when (val sendOTPResponse = sendOTPResult.value) {
                 is NetworkResponse.Error -> {

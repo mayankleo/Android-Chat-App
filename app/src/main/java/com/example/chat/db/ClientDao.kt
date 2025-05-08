@@ -16,7 +16,7 @@ interface ClientDao {
     fun insertMessage(message: Message)
 
     @Query("SELECT * FROM Client LIMIT 1")
-    fun getClient(): Client
+    fun getClient(): Client?
 
     @Query("DELETE FROM Client")
     fun deleteClient()

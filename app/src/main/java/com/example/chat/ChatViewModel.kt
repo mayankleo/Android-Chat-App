@@ -29,7 +29,7 @@ class ChatViewModel: ViewModel(){
     init {
         viewModelScope.launch(Dispatchers.IO) {
             val client = clientDao.getClient()
-            _tokenExists.postValue(client.token.isNotEmpty())
+            _tokenExists.postValue(client?.token?.isNotEmpty())
         }
     }
 
@@ -96,7 +96,7 @@ class ChatViewModel: ViewModel(){
                     clientDao.getClient()
                 }
                 Log.d("SocketViewModel", "Client value: $client")
-                val token = client.token
+                val token = client?.token
                 val response = chatAppApis.joinWithCode("Bearer $token",request)
                 if (response.isSuccessful) {
                     withContext(Dispatchers.IO) {

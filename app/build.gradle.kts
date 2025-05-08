@@ -19,6 +19,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -28,6 +29,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "SERVER_URL", "\"https://chatappserver-ti56.onrender.com\"")
+        }
+        debug {
+//            buildConfigField("String", "SERVER_URL", "\"http://10.0.2.2:3000\"")
+            buildConfigField("String", "SERVER_URL", "\"https://chatappserver-ti56.onrender.com\"")
         }
     }
     compileOptions {
@@ -39,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
