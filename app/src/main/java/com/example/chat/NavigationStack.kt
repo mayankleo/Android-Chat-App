@@ -1,6 +1,7 @@
 package com.example.chat
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,9 +12,23 @@ import androidx.navigation.navArgument
 fun NavigationStack(chatViewModel: ChatViewModel, socketViewModel: SocketViewModel) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screens.Login.route) {
+//    val tokenExists = true;
+    val tokenExists = chatViewModel.tokenExists.value
+
+//    LaunchedEffect(tokenExists) {
+//        if (tokenExists) {
+//            navController.navigate(Screens.Chat.route) {
+//                popUpTo(0)
+//            }
+//        }
+//    }
+
+    val startDestination = if (tokenExists == true) Screens.Chat.route else Screens.Login.route
+
+    NavHost(navController = navController, startDestination = startDestination) {
 
         composable(route = Screens.Login.route) {
+
             LoginPage(navController = navController, chatViewModel = chatViewModel)
         }
 

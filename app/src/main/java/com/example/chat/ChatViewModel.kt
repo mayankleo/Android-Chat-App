@@ -24,6 +24,15 @@ class ChatViewModel: ViewModel(){
     val clientDao = MainApplication.clientDatabase.getClientDao()
     private val chatAppApis = RetrofitInstance.chatAppApis
 
+    private val _tokenExists = MutableLiveData<Boolean>()
+    val tokenExists: LiveData<Boolean> = _tokenExists
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            val client = clientDao.getClient()
+            _tokenExists.postValue(client.token.isNotEmpty())
+        }
+    }
+
     private val _sendOTPResult = MutableLiveData<NetworkResponse<SendOTPResponseModel>>()
     val sendOTPResult: LiveData<NetworkResponse<SendOTPResponseModel>> = _sendOTPResult
     fun sendOTP(phone: String) {

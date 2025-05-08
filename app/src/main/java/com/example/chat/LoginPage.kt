@@ -64,7 +64,16 @@ fun LoginPage(navController: NavController, chatViewModel: ChatViewModel) {
                 }
 
                 NetworkResponse.Loading -> {
-                    CircularProgressIndicator()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.Top,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        CircularProgressIndicator()
+                    }
                 }
 
                 is NetworkResponse.Success<*> -> {
@@ -78,7 +87,16 @@ fun LoginPage(navController: NavController, chatViewModel: ChatViewModel) {
                         }
 
                         NetworkResponse.Loading -> {
-                            CircularProgressIndicator()
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.Top,
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Spacer(modifier = Modifier.height(24.dp))
+                                CircularProgressIndicator()
+                            }
                         }
 
                         is NetworkResponse.Success<*> -> {
@@ -90,7 +108,16 @@ fun LoginPage(navController: NavController, chatViewModel: ChatViewModel) {
                                 )
 
                                 NetworkResponse.Loading -> {
-                                    CircularProgressIndicator()
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(16.dp),
+                                        verticalArrangement = Arrangement.Top,
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Spacer(modifier = Modifier.height(24.dp))
+                                        CircularProgressIndicator()
+                                    }
                                 }
 
                                 is NetworkResponse.Success<*> -> {
@@ -98,7 +125,8 @@ fun LoginPage(navController: NavController, chatViewModel: ChatViewModel) {
                                 }
 
                                 null -> {
-                                    val responseJson = verifyOTPResponse.data as VerifyOTPResponseModel
+                                    val responseJson =
+                                        verifyOTPResponse.data as VerifyOTPResponseModel
                                     RoomCodeScreen(
                                         roomCode = roomCode,
                                         onRoomCodeChange = { roomCode = it },
@@ -116,7 +144,7 @@ fun LoginPage(navController: NavController, chatViewModel: ChatViewModel) {
                         null -> {
                             OTPInputScreen(
                                 otp = otp,
-                                onOTPChange = { phone = it },
+                                onOTPChange = { otp = it },
                                 onVerifyOTP = { chatViewModel.verifyOTP(phone, otp) },
                                 isLoading = verifyOTPResult.value is NetworkResponse.Loading
                             )
@@ -385,7 +413,11 @@ fun PreviewRoomCodeScreen() {
     RoomCodeScreen(
         roomCode = roomCode,
         onRoomCodeChange = { roomCode = it },
-        responseJson = VerifyOTPResponseModel(message = "hi", token = "mock_jwt_token_12345", code = "ABCD") ,
+        responseJson = VerifyOTPResponseModel(
+            message = "hi",
+            token = "mock_jwt_token_12345",
+            code = "ABCD"
+        ),
         navigateTo = { /* do nothing for preview */ },
         onJoinWithCode = { /* do nothing for preview */ }
     )

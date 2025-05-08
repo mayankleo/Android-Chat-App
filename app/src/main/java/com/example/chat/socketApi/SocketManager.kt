@@ -6,7 +6,8 @@ import io.socket.client.Socket
 import java.net.URISyntaxException
 
 object SocketManager {
-    private const val SERVER_URL = "http://10.0.2.2:3000"
+    private const val SERVER_URL = "https://chatappserver-ti56.onrender.com"
+//    private const val SERVER_URL = "http://10.0.2.2:3000"
     private var socket: Socket? = null
 
     fun initialize(token: String) {
