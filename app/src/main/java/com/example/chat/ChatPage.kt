@@ -134,7 +134,8 @@ fun ChatPage(socketViewModel: SocketViewModel) {
                 onMessageTextChange = { textMessage = it },
                 selectFile = { filePickerLauncher.launch("*/*") },
                 socketViewModel = socketViewModel,
-                context = context
+                context = context,
+                onDeleteButtonClick = {socketViewModel.deleteAllMessages()}
             )
         }
     }
@@ -148,6 +149,7 @@ fun ChatScreen(
     onSendMessage: (String) -> Unit,
     onMessageTextChange: (String) -> Unit,
     selectFile: () -> Unit,
+    onDeleteButtonClick: () -> Unit,
     socketViewModel: SocketViewModel,
     context: Context                                     ////////////////////look here
 ) {
@@ -253,7 +255,7 @@ fun ChatScreen(
                 Spacer(modifier = Modifier.height(4.dp))
                 IconButton(
                     onClick = {
-                        TODO()
+                        onDeleteButtonClick()
                     },
                     modifier = Modifier
                         .clip(RoundedCornerShape(4.dp))

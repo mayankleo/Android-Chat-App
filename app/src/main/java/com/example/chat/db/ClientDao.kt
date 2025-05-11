@@ -15,6 +15,9 @@ interface ClientDao {
     @Insert
     fun insertMessage(message: Message)
 
+    @Query("DELETE FROM Message")
+    fun deleteAllMessages()
+
     @Query("SELECT * FROM Client LIMIT 1")
     fun getClient(): Client?
 

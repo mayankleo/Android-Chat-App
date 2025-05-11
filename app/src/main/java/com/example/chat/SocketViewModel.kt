@@ -64,6 +64,12 @@ class SocketViewModel : ViewModel() {
         SocketManager.emit("msg", text)
     }
 
+    fun deleteAllMessages() {
+        viewModelScope.launch(Dispatchers.IO) {
+            clientDao.deleteAllMessages()
+        }
+    }
+
     private val _uploadFileResult = MutableLiveData<NetworkResponse<UploadFileResponseModel>>()
     val uploadFileResult: LiveData<NetworkResponse<UploadFileResponseModel>> = _uploadFileResult
     fun uploadFile(file: File) {
