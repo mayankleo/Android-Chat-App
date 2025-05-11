@@ -40,7 +40,9 @@ class ChatViewModel: ViewModel(){
         val request = SendOTPRequestModel(phone = phone)
         viewModelScope.launch {
             try {
-                val response = chatAppApis.sendOTP(request)
+                val response = withContext(Dispatchers.IO) {
+                    chatAppApis.sendOTP(request)
+                }
                 if (response.isSuccessful) {
                     response.body()?.let{
                         _sendOTPResult.value = NetworkResponse.Success(it)
@@ -64,11 +66,13 @@ class ChatViewModel: ViewModel(){
         val request = VerifyOTPRequestModel(phone = phone, otp = otp)
         viewModelScope.launch {
             try {
-                val response = chatAppApis.verifyOTP(request)
+                val response = withContext(Dispatchers.IO) {
+                    chatAppApis.verifyOTP(request)
+                }
                 if (response.isSuccessful) {
                     viewModelScope.launch(Dispatchers.IO) {
                         clientDao.deleteClient()
-                        clientDao.insertClient(Client(token = response.body()!!.token, roomName = response.body()!!.code))
+                        clientDao.insertClient(Client(token = response.body()!!.token, roomName = response.body()!!.roomCode))
                     }
                     response.body()?.let{
                         _verifyOTPResult.value = NetworkResponse.Success(it)
@@ -87,9 +91,9 @@ class ChatViewModel: ViewModel(){
 
     private val _joinWithCodeResult = MutableLiveData<NetworkResponse<JoinWithCodeResponseModel>>()
     val joinWithCodeResult: LiveData<NetworkResponse<JoinWithCodeResponseModel>> = _joinWithCodeResult
-    fun joinWithCode(code: String) {
+    fun joinWithCode(roomCode: String) {
         _joinWithCodeResult.value = NetworkResponse.Loading
-        val request = JoinWithCodeRequestModel(code = code)
+        val request = JoinWithCodeRequestModel(roomCode = roomCode)
         viewModelScope.launch {
             try {
                 val client = withContext(Dispatchers.IO) {
@@ -97,10 +101,16 @@ class ChatViewModel: ViewModel(){
                 }
                 Log.d("SocketViewModel", "Client value: $client")
                 val token = client?.token
-                val response = chatAppApis.joinWithCode("Bearer $token",request)
+                if (token.isNullOrEmpty()) {
+                    _joinWithCodeResult.value = NetworkResponse.Error("Token is missing")
+                    return@launch
+                }
+                val response = withContext(Dispatchers.IO) {
+                    chatAppApis.joinWithCode("Bearer $token",request)
+                }
                 if (response.isSuccessful) {
                     withContext(Dispatchers.IO) {
-                        clientDao.updateClientRoomName(response.body()!!.room.name)
+                        clientDao.updateClientRoomName(response.body()!!.room.roomName)
                     }
                     response.body()?.let{
                         _joinWithCodeResult.value = NetworkResponse.Success(it)

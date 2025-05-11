@@ -32,8 +32,8 @@ android {
             buildConfigField("String", "SERVER_URL", "\"https://chatappserver-ti56.onrender.com\"")
         }
         debug {
-//            buildConfigField("String", "SERVER_URL", "\"http://10.0.2.2:3000\"")
-            buildConfigField("String", "SERVER_URL", "\"https://chatappserver-ti56.onrender.com\"")
+            buildConfigField("String", "SERVER_URL", "\"http://10.0.2.2:3000\"")
+//            buildConfigField("String", "SERVER_URL", "\"https://chatappserver-ti56.onrender.com\"")
         }
     }
     compileOptions {
@@ -53,7 +53,7 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("androidx.compose.material3:material3:1.3.1")
-//    implementation("org.whispersystems:signal-protocol-android:2.8.1")
+    implementation("io.coil-kt:coil-compose:2.4.0")
 
     implementation("io.socket:socket.io-client:2.1.0")
 

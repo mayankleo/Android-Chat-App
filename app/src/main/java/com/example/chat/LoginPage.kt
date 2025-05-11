@@ -328,7 +328,7 @@ fun RoomCodeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Share Room Code To Friend:  ${responseJson.code}",
+                text = "Share Room Code To Friend:  ${responseJson.roomCode}",
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
             )
@@ -415,7 +415,7 @@ fun PreviewRoomCodeScreen() {
         responseJson = VerifyOTPResponseModel(
             message = "hi",
             token = "mock_jwt_token_12345",
-            code = "ABCD"
+            roomCode = "ABCD"
         ),
         navigateTo = { /* do nothing for preview */ },
         onJoinWithCode = { /* do nothing for preview */ }
