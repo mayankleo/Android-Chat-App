@@ -53,7 +53,10 @@ dependencies {
 
     implementation("androidx.navigation:navigation-compose:2.8.9")
     implementation("androidx.compose.material3:material3:1.3.1")
+
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("androidx.media3:media3-exoplayer:1.6.1")
+    implementation("androidx.media3:media3-ui:1.6.1")
 
     implementation("io.socket:socket.io-client:2.1.0")
 

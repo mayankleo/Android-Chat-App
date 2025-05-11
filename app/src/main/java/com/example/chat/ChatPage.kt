@@ -2,8 +2,11 @@ package com.example.chat
 
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -31,12 +34,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -48,12 +53,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.motionEventSpy
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
+import androidx.room.util.TableInfo
 import coil.compose.AsyncImage
 import com.example.chat.api.ApiUtils
 import com.example.chat.db.Message
@@ -103,6 +114,19 @@ fun ChatPage(socketViewModel: SocketViewModel) {
                 .padding(innerPadding)
                 .background(Color.White)
         ) {
+            Row(
+                modifier = Modifier
+                    .background(Color.Blue)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = "Your Conversation",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color.White
+                )
+            }
             ChatScreen(
                 textMessage = textMessage,
                 messageList = messageList ?: emptyList(),
@@ -116,97 +140,6 @@ fun ChatPage(socketViewModel: SocketViewModel) {
     }
 }
 
-fun longToTime(timestamp: Long): String {
-    val instant = Instant.ofEpochMilli(timestamp)
-    val formatter = DateTimeFormatter.ofPattern("hh:mm a").withZone(ZoneId.systemDefault())
-    return formatter.format(instant)
-}
-
-@Composable
-fun ChatBubble(message: Message, socketViewModel: SocketViewModel, context: Context) {
-    val getFileResult = socketViewModel.getFileResult.observeAsState()
-    Log.d("chat bubble", "${message.message} ${message.fileName} ${message.originalFileName}")
-
-    val filePath = remember(message.fileName) {
-        mutableStateOf<File?>(null)
-    }
-
-    if (message.fileName != null) {
-        LaunchedEffect(message.fileName) {
-            socketViewModel.getFile(context, message.fileName!!)
-        }
-    }
-
-    LaunchedEffect(getFileResult.value) {
-        val expectedFileName = message.fileName
-
-        if (!expectedFileName.isNullOrBlank()) {
-            val file = File(context.filesDir, expectedFileName)
-            if (file.exists()) {
-                filePath.value = file
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp),
-        horizontalAlignment = if (message.senderByMe) Alignment.End else Alignment.Start
-    ) {
-        Box(
-            modifier = Modifier
-                .clip(
-                    RoundedCornerShape(
-                        topStart = 16.dp,
-                        topEnd = 16.dp,
-                        bottomStart = if (message.senderByMe) 16.dp else 0.dp,
-                        bottomEnd = if (message.senderByMe) 0.dp else 16.dp
-                    )
-                )
-                .background(
-                    if (message.senderByMe) Color.Blue else Color.Gray,
-                )
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            when {
-                message.message != null -> {
-                    Text(
-                        text = message.message!!,
-                        color = if (message.senderByMe) Color.White else Color.Black
-                    )
-                }
-
-                filePath.value != null -> {
-                    val fileUri = FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.provider",
-                        filePath.value!!
-                    )
-                    AsyncImage(
-                        model = fileUri,
-                        contentDescription = null,
-                        modifier = Modifier.size(128.dp)
-                    )
-                }
-
-                else -> {
-                    CircularProgressIndicator(
-                        color = if (message.senderByMe) Color.White else Color.Black,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
-
-
-        Text(
-            text = longToTime(message.timestamp),
-            fontSize = 10.sp,
-            color = Color.Gray
-        )
-    }
-}
 
 @Composable
 fun ChatScreen(
@@ -220,19 +153,6 @@ fun ChatScreen(
 ) {
     val listState = rememberLazyListState()
     Column {
-        Row(
-            modifier = Modifier
-                .background(Color.Blue)
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            Text(
-                text = "Your Conversation",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                color = Color.White
-            )
-        }
 
         LaunchedEffect(messageList.size) {
             if (messageList.isNotEmpty()) {
@@ -352,6 +272,187 @@ fun ChatScreen(
         }
     }
 }
+
+
+fun longToTime(timestamp: Long): String {
+    val instant = Instant.ofEpochMilli(timestamp)
+    val formatter = DateTimeFormatter.ofPattern("hh:mm a").withZone(ZoneId.systemDefault())
+    return formatter.format(instant)
+}
+
+@Composable
+fun ChatBubble(message: Message, socketViewModel: SocketViewModel, context: Context) {
+
+    val getFileResult = socketViewModel.getFileResult.observeAsState()
+    val filePath = remember(message.fileName) { mutableStateOf<File?>(null) }
+
+    LaunchedEffect(message.fileName) {
+        val fileName = message.fileName
+        if (!fileName.isNullOrBlank()) {
+            val file = File(context.filesDir, fileName)
+            if (file.exists()) {
+                filePath.value = file
+            } else {
+                socketViewModel.getFile(context, fileName)
+            }
+        }
+    }
+
+    LaunchedEffect(getFileResult.value) {
+        val fileName = message.fileName
+        if (!fileName.isNullOrBlank()) {
+            val file = File(context.filesDir, fileName)
+            if (file.exists()) {
+                filePath.value = file
+            }
+        }
+    }
+
+   LaunchedEffect(filePath.value) {
+
+   }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
+        horizontalAlignment = if (message.senderByMe) Alignment.End else Alignment.Start
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(
+                    RoundedCornerShape(
+                        topStart = 16.dp,
+                        topEnd = 16.dp,
+                        bottomStart = if (message.senderByMe) 16.dp else 0.dp,
+                        bottomEnd = if (message.senderByMe) 0.dp else 16.dp
+                    )
+                )
+                .background(
+                    if (message.senderByMe) Color.Blue else Color.Gray,
+                )
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            when {
+                message.message != null -> {
+                    Text(
+                        text = message.message!!,
+                        color = if (message.senderByMe) Color.White else Color.Black
+                    )
+                }
+
+                filePath.value != null -> {
+                    val fileUri = FileProvider.getUriForFile(context, "${context.packageName}.provider", filePath.value!!)
+                    val fileType = context.contentResolver.getType(fileUri)
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "*/*"
+                        putExtra(Intent.EXTRA_STREAM, fileUri)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                    val saveLauncher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.CreateDocument("*/*"),
+                        onResult = { destinationUri ->
+                            destinationUri?.let {
+                                context.contentResolver.openOutputStream(it)?.use { output ->
+                                    filePath.value!!.inputStream().use { input ->
+                                        input.copyTo(output)
+                                    }
+                                }
+                            }
+                        }
+                    )
+                    Column{
+                        when {
+                            fileType?.startsWith("image/") == true -> {
+                                AsyncImage(
+                                    model = fileUri,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+
+                            fileType?.startsWith("video/") == true -> {
+                                ExoVideoPlayer(fileUri)
+                            }
+
+                            else -> {
+                                Text(text = "📁 ${message.originalFileName!!}", color = Color.White)
+                            }
+                        }
+                        Row{
+                            Button(
+                                onClick = {
+                                    context.startActivity(Intent.createChooser(shareIntent, "Share file"))
+                                }
+                            ) {
+                                Text(text="share")
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Button(
+                                onClick = {
+                                    saveLauncher.launch(filePath.value!!.name)
+                                }
+                            ) {
+                                Text(text="save")
+                            }
+                        }
+                    }
+                }
+
+                else -> {
+                    CircularProgressIndicator(
+                        color = if (message.senderByMe) Color.White else Color.Black,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = longToTime(message.timestamp),
+            fontSize = 10.sp,
+            color = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun ExoVideoPlayer(videoUri: Uri) {
+    val context = LocalContext.current
+
+    // Create and remember ExoPlayer
+    val exoPlayer = remember(videoUri) {
+        ExoPlayer.Builder(context).build().apply {
+            setMediaItem(MediaItem.fromUri(videoUri))
+            prepare()
+            playWhenReady = false
+        }
+    }
+
+    // Dispose ExoPlayer when no longer needed
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
+        }
+    }
+
+    // Use AndroidView to show PlayerView
+    AndroidView(
+        factory = {
+            PlayerView(context).apply {
+                player = exoPlayer
+                useController = true
+                layoutParams = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+        },
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+    )
+}
+
 
 //@Preview(showBackground = true)
 //@Composable
